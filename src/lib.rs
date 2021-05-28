@@ -3131,11 +3131,10 @@ impl Connection {
         }
 
         let payload_len = b.off() - payload_offset;
-        let payload_len = payload_len + crypto_overhead;
 
         // Fill in payload length.
         if pkt_type != packet::Type::Short {
-            let len = pn_len + payload_len;
+            let len = pn_len + payload_len + crypto_overhead;
 
             let (_, mut payload_with_len) = b.split_at(header_offset)?;
             payload_with_len
@@ -3198,6 +3197,7 @@ impl Connection {
             pn_len,
             payload_len,
             payload_offset,
+            None,
             aead,
         )?;
 
@@ -5866,11 +5866,10 @@ pub mod testing {
 
         hdr.to_bytes(&mut b)?;
 
-        let payload_len = frames.iter().fold(0, |acc, x| acc + x.wire_len()) +
-            space.crypto_overhead().unwrap();
+        let payload_len = frames.iter().fold(0, |acc, x| acc + x.wire_len());
 
         if pkt_type != packet::Type::Short {
-            let len = pn_len + payload_len;
+            let len = pn_len + payload_len + space.crypto_overhead().unwrap();
             b.put_varint(len as u64)?;
         }
 
@@ -5895,6 +5894,7 @@ pub mod testing {
             pn_len,
             payload_len,
             payload_offset,
+            None,
             aead,
         )?;
 
@@ -8316,8 +8316,7 @@ mod tests {
         let space = &mut pipe.client.pkt_num_spaces[epoch];
 
         // Use correct payload length when encrypting the packet.
-        let payload_len = frames.iter().fold(0, |acc, x| acc + x.wire_len()) +
-            space.crypto_overhead().unwrap();
+        let payload_len = frames.iter().fold(0, |acc, x| acc + x.wire_len());
 
         let aead = space.crypto_seal.as_ref().unwrap();
 
@@ -8327,6 +8326,7 @@ mod tests {
             pn_len,
             payload_len,
             payload_offset,
+            None,
             aead,
         )
         .unwrap();
