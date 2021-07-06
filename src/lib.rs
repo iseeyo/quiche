@@ -2138,8 +2138,9 @@ impl Connection {
         });
 
         qlog_with!(self.qlog_streamer, q, {
-            let ev = self.recovery.to_qlog();
-            q.add_event_with_instant(ev, now).ok();
+            if let Some(ev) = self.recovery.maybe_qlog() {
+                q.add_event_with_instant(ev, now).ok();
+            }
         });
 
         // Only log the remote transport parameters once the connection is
@@ -3249,8 +3250,9 @@ impl Connection {
         );
 
         qlog_with!(self.qlog_streamer, q, {
-            let ev = self.recovery.to_qlog();
-            q.add_event_with_instant(ev, now).ok();
+            if let Some(ev) = self.recovery.maybe_qlog() {
+                q.add_event_with_instant(ev, now).ok();
+            }
         });
 
         self.pkt_num_spaces[epoch].next_pkt_num += 1;
@@ -4131,8 +4133,9 @@ impl Connection {
                 );
 
                 qlog_with!(self.qlog_streamer, q, {
-                    let ev = self.recovery.to_qlog();
-                    q.add_event_with_instant(ev, now).ok();
+                    if let Some(ev) = self.recovery.maybe_qlog() {
+                        q.add_event_with_instant(ev, now).ok();
+                    }
                 });
 
                 return;
